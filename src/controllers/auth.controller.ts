@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { prismaClient } from "../db/prisma";
 import { hashPassword, comparePassword } from "../utils/hashPassword";
 import jwt from "jsonwebtoken";
+import { z } from "zod";
 import { loginSchema, userSchema } from "../utils/zodTypes";
 
 export const userRegister = async (
@@ -12,16 +13,17 @@ export const userRegister = async (
   const validatedData = userSchema.safeParse(req.body);
   if (!validatedData.success) {
     return res.status(403).json({
-      message: "Not valid input",
+      message: z.prettifyError(validatedData.error),
     });
   }
   const { username, email, password, role } = validatedData.data;
   try {
     const alreadyUser = await prismaClient.user.findUnique({
       where: { username },
+      select: { username: true },
     });
     if (alreadyUser) {
-      res.status(401).json({
+      return res.status(401).json({
         message: "This username already exists",
       });
     }
@@ -52,7 +54,7 @@ export const userLogin = async (
   const validatedData = loginSchema.safeParse(req.body);
   if (!validatedData.success) {
     return res.status(403).json({
-      message: "Not valid input",
+      message: z.prettifyError(validatedData.error),
     });
   }
   const { username, password } = validatedData.data;
@@ -78,9 +80,16 @@ export const userLogin = async (
         userId,
         userRole,
       },
-      process.env.JWT_SECRET || "123456"
+      process.env.JWT_SECRET ?? "",
+      { expiresIn: "15m" }
     );
-    res.status(201).json({
+
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+
+    res.status(201).cookie("accessToken", token, options).json({
       message: "Login successfull!",
       token,
     });

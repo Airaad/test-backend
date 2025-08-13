@@ -6,8 +6,14 @@ const authMiddleware = async (
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.headers.authorization ?? "";
-  const decode = jwt.verify(token, process.env.JWT_SECRET || "123456");
+  const token = req.cookies?.accessToken;
+
+  if (!token) {
+    return res.status(401).json({
+      message: "unauthorized",
+    });
+  }
+  const decode = jwt.verify(token, process.env.JWT_SECRET ?? "");
 
   if (!decode) {
     return res.status(401).json({
@@ -15,7 +21,12 @@ const authMiddleware = async (
     });
   }
 
-  //@ts-ignore
-  req.userId = decode.userId;
+  if (typeof decode === "object" && decode !== null && "userId" in decode) {
+    req.userId = (decode as { userId?: string }).userId;
+  }
+
+  if (typeof decode === "object" && decode !== null && "userRole" in decode) {
+    req.userRole = (decode as { userRole?: string }).userRole;
+  }
   next();
 };
