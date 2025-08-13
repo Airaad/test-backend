@@ -2,13 +2,20 @@ import { NextFunction, Request, Response } from "express";
 import { prismaClient } from "../db/prisma";
 import { hashPassword, comparePassword } from "../utils/hashPassword";
 import jwt from "jsonwebtoken";
+import { loginSchema, userSchema } from "../utils/zodTypes";
 
 export const userRegister = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { username, email, password, role } = req.body;
+  const validatedData = userSchema.safeParse(req.body);
+  if (!validatedData.success) {
+    return res.status(403).json({
+      message: "Not valid input",
+    });
+  }
+  const { username, email, password, role } = validatedData.data;
   try {
     const alreadyUser = await prismaClient.user.findUnique({
       where: { username },
@@ -34,7 +41,6 @@ export const userRegister = async (
     res.status(501).json({
       message: "Something went wrong!",
     });
-    console.log(error);
   }
 };
 
@@ -43,7 +49,13 @@ export const userLogin = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { username, password } = req.body;
+  const validatedData = loginSchema.safeParse(req.body);
+  if (!validatedData.success) {
+    return res.status(403).json({
+      message: "Not valid input",
+    });
+  }
+  const { username, password } = validatedData.data;
   try {
     const validUser = await prismaClient.user.findUnique({
       where: { username },
@@ -76,6 +88,5 @@ export const userLogin = async (
     res.status(501).json({
       message: "Something went wrong!",
     });
-    console.log(error);
   }
 };
