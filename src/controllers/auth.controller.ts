@@ -36,7 +36,7 @@ export const userRegister = async (req: Request, res: Response) => {
       message: "Signup successfull!",
     });
   } catch (error) {
-    res.status(501).json({
+    res.status(500).json({
       message: "Something went wrong!",
     });
   }
@@ -81,7 +81,7 @@ export const userLogin = async (req: Request, res: Response) => {
       token,
     });
   } catch (error) {
-    res.status(501).json({
+    res.status(500).json({
       message: "Something went wrong!",
     });
   }

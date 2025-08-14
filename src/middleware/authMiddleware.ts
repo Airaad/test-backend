@@ -10,14 +10,14 @@ const authMiddleware = async (
 
   if (!token) {
     return res.status(401).json({
-      message: "unauthorized",
+      message: "Unauthorized! Please signin first.",
     });
   }
   const decode = jwt.verify(token, process.env.JWT_SECRET ?? "");
 
   if (!decode) {
     return res.status(401).json({
-      message: "unauthorized",
+      message: "Unauthorized! Please signin first.",
     });
   }
 
@@ -30,3 +30,5 @@ const authMiddleware = async (
   }
   next();
 };
+
+export default authMiddleware;
