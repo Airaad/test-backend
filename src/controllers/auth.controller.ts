@@ -5,18 +5,14 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { loginSchema, userSchema } from "../utils/zodTypes";
 
-export const userRegister = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const userRegister = async (req: Request, res: Response) => {
   const validatedData = userSchema.safeParse(req.body);
   if (!validatedData.success) {
     return res.status(403).json({
       message: z.prettifyError(validatedData.error),
     });
   }
-  const { username, email, password, role } = validatedData.data;
+  const { username, email, password } = validatedData.data;
   try {
     const alreadyUser = await prismaClient.user.findUnique({
       where: { username },
@@ -33,7 +29,7 @@ export const userRegister = async (
         username,
         password: hashedPassword,
         email,
-        role,
+        role: "regular",
       },
     });
     res.status(201).json({
@@ -46,11 +42,7 @@ export const userRegister = async (
   }
 };
 
-export const userLogin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const userLogin = async (req: Request, res: Response) => {
   const validatedData = loginSchema.safeParse(req.body);
   if (!validatedData.success) {
     return res.status(403).json({
@@ -84,12 +76,7 @@ export const userLogin = async (
       { expiresIn: "15m" }
     );
 
-    const options = {
-      httpOnly: true,
-      secure: true,
-    };
-
-    res.status(201).cookie("accessToken", token, options).json({
+    res.status(201).json({
       message: "Login successfull!",
       token,
     });

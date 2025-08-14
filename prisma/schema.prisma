@@ -8,9 +8,50 @@ datasource db {
 }
 
 model User {
-  id        String  @id @default(uuid())
-  username  String  @unique
-  email     String  @unique
-  password  String
-  role      String
+  id              String  @id @default(cuid())
+  username        String  @unique
+  email           String  @unique
+  password        String
+  profileImage    String?
+  role            String
+  hosted          Hotel[]
+  uploadedImages  Images[]
+  addedReviews    Reviews[]
+  createdAt       DateTime @default(now())
+}
+
+model Hotel {
+  id            String    @id @default(cuid())
+  thumbnail     Json
+  address       String
+  description   String
+  hostId        String
+  host          User      @relation(fields: [hostId], references: [id])
+  images        Images[]
+  reviews       Reviews[]
+  AverageRating Int
+  createdAt     DateTime @default(now())
+}
+
+model Images {
+  id          String  @id @default(cuid())
+  url         String
+  title       String
+  description String
+  hostId      String
+  host        User    @relation(fields: [hostId], references: [id])
+  hotelId     String
+  hotel       Hotel   @relation(fields: [hotelId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Reviews {
+  id          String  @id @default(cuid())
+  hostId      String
+  host        User    @relation(fields: [hostId], references: [id])
+  hotelId     String
+  hotel       Hotel   @relation(fields: [hotelId], references: [id])
+  comment     String
+  rating      Int
+  createdAt   DateTime @default(now())
 }
