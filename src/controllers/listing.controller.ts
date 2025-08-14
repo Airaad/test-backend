@@ -3,7 +3,7 @@ import { prismaClient } from "../db/prisma";
 
 export const exploreListings = async (req: Request, res: Response) => {
   try {
-    const places = await prismaClient.hotel.findMany({
+    const places = await prismaClient.listing.findMany({
       take: 50,
       orderBy: { createdAt: "desc" },
     });
@@ -22,7 +22,7 @@ export const exploreListings = async (req: Request, res: Response) => {
 export const getListingInfo = async (req: Request, res: Response) => {
   const placeId = req.params.id;
   try {
-    const place = await prismaClient.hotel.findUnique({
+    const place = await prismaClient.listing.findUnique({
       where: { id: placeId },
     });
 
@@ -62,7 +62,7 @@ export const addListing = async (req: Request, res: Response) => {
         message: "User not found",
       });
     }
-    const createdPlace = await prismaClient.hotel.create({
+    const createdPlace = await prismaClient.listing.create({
       data: {
         thumbnail: {
           title,
@@ -71,7 +71,7 @@ export const addListing = async (req: Request, res: Response) => {
         address,
         description,
         hostId,
-        AverageRating: 0,
+        averageRating: 0,
       },
     });
     res.status(201).json({
@@ -104,7 +104,7 @@ export const deleteListing = async (req: Request, res: Response) => {
         message: "User not found",
       });
     }
-    await prismaClient.hotel.delete({
+    await prismaClient.listing.delete({
       where: { id: placeId, hostId },
     });
 
