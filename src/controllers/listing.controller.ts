@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { prismaClient } from "../db/prisma";
+import { listingSchema } from "../utils/zodTypes";
+import z from "zod";
 
 export const exploreListings = async (req: Request, res: Response) => {
   try {
@@ -51,8 +53,14 @@ export const addListing = async (req: Request, res: Response) => {
       message: "Unauthorized!",
     });
   }
-  //TODO: Check whether user is host or not
-  const { title, address, description } = req.body;
+
+  const validatedData = listingSchema.safeParse(req.body);
+  if (!validatedData.success) {
+    return res.status(403).json({
+      message: z.prettifyError(validatedData.error),
+    });
+  }
+  const { title, address, description } = validatedData.data;
   try {
     const isValidUser = await prismaClient.user.findUnique({
       where: { id: hostId },
@@ -94,7 +102,6 @@ export const deleteListing = async (req: Request, res: Response) => {
       message: "Unauthorized!",
     });
   }
-  //TODO: Check whether user is host or not
   try {
     const isValidUser = await prismaClient.user.findUnique({
       where: { id: hostId },
