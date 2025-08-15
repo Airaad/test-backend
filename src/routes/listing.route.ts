@@ -15,8 +15,6 @@ router.route("/:id").get(getListingInfo);
 
 //Protected Routes
 router.route("/add-listing").post(authMiddleware, hostMiddleware, addListing);
-router
-  .route("/remove/:id")
-  .delete(authMiddleware, hostMiddleware, deleteListing);
+router.route("/remove/:id").delete(authMiddleware, hostMiddleware, deleteListing);
 
 export default router;

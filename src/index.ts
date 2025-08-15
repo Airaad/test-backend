@@ -1,6 +1,7 @@
 import express from "express";
 import authRouter from "./routes/auth.route";
 import listingRouter from "./routes/listing.route";
+import userRouter from "./routes/user.route";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -13,6 +14,7 @@ app.use(express.json());
 //auth-routes
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/listing", listingRouter);
+app.use("/api/v1/user", userRouter);
 
 app.listen(port, () => {
   console.log("listening on port", port);
