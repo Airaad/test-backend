@@ -15,6 +15,9 @@ export const loginSchema = z.object({
 
 export const listingSchema = z.object({
   title: z.string().min(5),
+  thumbnailTitle: z.string().min(5),
+  price: z.number(),
+  priceTag: z.string(),
   description: z.string().min(10),
   address: z.string().min(15).max(50),
 });

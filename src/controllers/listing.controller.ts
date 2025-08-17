@@ -60,7 +60,8 @@ export const addListing = async (req: Request, res: Response) => {
       message: z.prettifyError(validatedData.error),
     });
   }
-  const { title, address, description } = validatedData.data;
+  const { title, thumbnailTitle, price, priceTag, address, description } =
+    validatedData.data;
   try {
     const isValidUser = await prismaClient.user.findUnique({
       where: { id: hostId },
@@ -72,12 +73,15 @@ export const addListing = async (req: Request, res: Response) => {
     }
     const createdPlace = await prismaClient.listing.create({
       data: {
+        title,
         thumbnail: {
-          title,
+          thumbnailTitle,
           url: "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aG90ZWx8ZW58MHx8MHx8fDA%3D",
         },
         address,
         description,
+        price,
+        priceTag,
         hostId,
         averageRating: 0,
       },
