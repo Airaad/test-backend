@@ -21,3 +21,8 @@ export const listingSchema = z.object({
   description: z.string().min(10),
   address: z.string().min(15).max(50),
 });
+
+export const bookingSchema = z.object({
+  startDate: z.date(),
+  endDate: z.date(),
+});
