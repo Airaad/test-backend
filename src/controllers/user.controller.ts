@@ -58,7 +58,7 @@ export const bookListing = async (req: Request, res: Response) => {
     const overlappingBooking = await prismaClient.booking.findFirst({
       where: {
         placeId,
-        status: "booked",
+        status: "confirmed",
         startDate: { lte: endDate },
         endDate: { gte: startDate },
       },
@@ -75,6 +75,7 @@ export const bookListing = async (req: Request, res: Response) => {
       where: {
         userId,
         placeId,
+        status: confirmed,
         startDate: { lte: endDate },
         endDate: { gte: startDate },
       },
@@ -92,12 +93,69 @@ export const bookListing = async (req: Request, res: Response) => {
         placeId,
         startDate,
         endDate,
-        status: "booked",
+        status: "confirmed",
       },
     });
     return res.status(201).json({
       message: "Booking successful!",
       booking,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const cancelBooking = async (req: Request, res: Response) => {
+  const bookingId = req.params.id;
+  const userId = req.userId;
+  if (!userId) {
+    return res.status(401).json({
+      message: "Unauthorized. Please sign in again",
+    });
+  }
+  try {
+    const bookedPlace = await prismaClient.booking.findUnique({
+      where: {
+        id: bookingId,
+        userId,
+      },
+    });
+    if (!bookedPlace) {
+      return res.status(404).json({
+        message: "No booking found",
+      });
+    }
+    const canceled = await prismaClient.booking.update({
+      where: { id: bookedPlace.id },
+      data: { status: "cancelled" },
+    });
+
+    res.status(200).json({
+      message: "Booking cancelled successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const getHistory = async (req: Request, res: Response) => {
+  const userId = req.userId;
+  if (!userId) {
+    return res.status(401).json({
+      message: "Unauthorized. Please sign in again",
+    });
+  }
+  try {
+    const userBookings = await prismaClient.booking.findMany({
+      where: { userId },
+      orderBy: { startDate: "desc" },
+    });
+    res.status(201).json({
+      userBookings,
     });
   } catch (error) {
     res.status(500).json({
