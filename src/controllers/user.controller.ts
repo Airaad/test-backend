@@ -53,38 +53,97 @@ export const bookListing = async (req: Request, res: Response) => {
   }
   const { startDate, endDate } = validatedData.data;
 
+  // Validate date logic
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const now = new Date();
+
+  if (start >= end) {
+    return res.status(400).json({
+      message: "End date must be after start date",
+    });
+  }
+
+  if (start < now) {
+    return res.status(400).json({
+      message: "Booking start date cannot be in the past",
+    });
+  }
+
   try {
+    const place = await prismaClient.listing.findUnique({
+      where: { id: placeId },
+    });
+
+    if (!place) {
+      return res.status(404).json({
+        message: "Place not found",
+      });
+    }
+
     // To check if place is already booked
     const overlappingBooking = await prismaClient.booking.findFirst({
       where: {
-        placeId,
-        status: "confirmed",
-        startDate: { lte: endDate },
-        endDate: { gte: startDate },
+        placeId, // Same place
+        status: {
+          in: ["pending", "confirmed"], // Only active bookings (not cancelled)
+        },
+        OR: [
+          // ANY of these 4 conditions = overlap
+          // Condition 1: New starts during existing
+          {
+            AND: [{ startDate: { lte: start } }, { endDate: { gt: start } }],
+          },
+          // Condition 2: New ends during existing
+          {
+            AND: [{ startDate: { lt: end } }, { endDate: { gte: end } }],
+          },
+          // Condition 3: New contains existing
+          {
+            AND: [{ startDate: { gte: start } }, { endDate: { lte: end } }],
+          },
+          // Condition 4: Existing contains new
+          {
+            AND: [{ startDate: { lte: start } }, { endDate: { gte: end } }],
+          },
+        ],
+      },
+      include: {
+        user: {
+          select: {
+            username: true,
+          },
+        },
       },
     });
 
     if (overlappingBooking) {
-      return res.status(400).json({
-        message: "This place is already booked for the selected dates.",
-      });
-    }
+      const isOwnBooking = overlappingBooking.userId === userId;
 
-    // To check if user already booked the same place
-    const userDoubleBooking = await prismaClient.booking.findFirst({
-      where: {
-        userId,
-        placeId,
-        status: "confirmed",
-        startDate: { lte: endDate },
-        endDate: { gte: startDate },
-      },
-    });
-
-    if (userDoubleBooking) {
-      return res.status(400).json({
-        message: "You already have a booking for this place on these dates.",
-      });
+      if (isOwnBooking) {
+        return res.status(400).json({
+          message:
+            "You already have a booking for this place during these dates.",
+          details: {
+            existingBooking: {
+              id: overlappingBooking.id,
+              startDate: overlappingBooking.startDate,
+              endDate: overlappingBooking.endDate,
+              status: overlappingBooking.status,
+            },
+          },
+        });
+      } else {
+        return res.status(400).json({
+          message: "This place is already booked for the selected dates.",
+          details: {
+            conflictPeriod: {
+              startDate: overlappingBooking.startDate,
+              endDate: overlappingBooking.endDate,
+            },
+          },
+        });
+      }
     }
 
     const booking = await prismaClient.booking.create({

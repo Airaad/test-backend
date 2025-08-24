@@ -83,7 +83,6 @@ model Booking {
   endDate     DateTime 
   status      BookingStatus  
   createdAt   DateTime @default(now())
-
-  @@unique([placeId, startDate, endDate, status])
+  updatedAt   DateTime @updatedAt
 }
 
