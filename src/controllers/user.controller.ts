@@ -75,7 +75,7 @@ export const bookListing = async (req: Request, res: Response) => {
       where: {
         userId,
         placeId,
-        status: confirmed,
+        status: "confirmed",
         startDate: { lte: endDate },
         endDate: { gte: startDate },
       },
@@ -122,7 +122,7 @@ export const cancelBooking = async (req: Request, res: Response) => {
         userId,
       },
     });
-    if (!bookedPlace) {
+    if (!bookedPlace || bookedPlace.status === "cancelled") {
       return res.status(404).json({
         message: "No booking found",
       });
@@ -152,7 +152,7 @@ export const getHistory = async (req: Request, res: Response) => {
   try {
     const userBookings = await prismaClient.booking.findMany({
       where: { userId },
-      orderBy: { startDate: "desc" },
+      orderBy: { createdAt: "desc" },
     });
     res.status(201).json({
       userBookings,

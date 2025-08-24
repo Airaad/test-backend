@@ -73,7 +73,7 @@ export const userLogin = async (req: Request, res: Response) => {
         userRole,
       },
       process.env.JWT_SECRET ?? "",
-      { expiresIn: "15m" }
+      { expiresIn: "30m" }
     );
 
     res.status(201).json({

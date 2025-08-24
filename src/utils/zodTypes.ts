@@ -5,7 +5,6 @@ export const userSchema = z.object({
   username: z.string().min(5).max(10),
   password: z.string(),
   profileImage: z.string().optional(),
-  role: z.enum(["regular", "host"]),
 });
 
 export const loginSchema = z.object({
@@ -22,6 +21,6 @@ export const listingSchema = z.object({
 });
 
 export const bookingSchema = z.object({
-  startDate: z.date(),
-  endDate: z.date(),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
 });
