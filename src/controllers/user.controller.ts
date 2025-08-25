@@ -81,6 +81,13 @@ export const bookListing = async (req: Request, res: Response) => {
       });
     }
 
+    // Check if user is trying to book their own property
+    if (place.hostId === userId) {
+      return res.status(400).json({
+        message: "You cannot book your own property.",
+      });
+    }
+
     // To check if place is already booked
     const overlappingBooking = await prismaClient.booking.findFirst({
       where: {
